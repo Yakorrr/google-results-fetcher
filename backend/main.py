@@ -6,8 +6,8 @@ import os
 
 app = FastAPI()
 
-allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
-origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+origins_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
+origins = [origin.strip().rstrip("/") for origin in origins_raw.split(",")]
 
 # Allow frontend origin
 app.add_middleware(
@@ -17,15 +17,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    # Log incoming request origin to see what we are dealing with
-    origin = request.headers.get("origin")
-    print(f"Request from origin: {origin}")
-    response = await call_next(request)
-    return response
 
 
 class SearchRequest(BaseModel):

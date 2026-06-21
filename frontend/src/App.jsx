@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import './App.css';
+import {prepareJsonData} from "./utils.js";
 
 function App() {
     const [query, setQuery] = useState('');
@@ -33,7 +34,7 @@ function App() {
 
     // Convert results to JSON and trigger a browser download
     const downloadFile = () => {
-        const blob = new Blob([JSON.stringify(results, null, 2)], {
+        const blob = new Blob([prepareJsonData(results)], {
             type: 'application/json'
         });
         const url = URL.createObjectURL(blob);

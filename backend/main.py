@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from serpapi import GoogleSearch
@@ -8,14 +8,23 @@ app = FastAPI()
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
-
 # Allow frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    # Log incoming request origin to see what we are dealing with
+    origin = request.headers.get("origin")
+    print(f"Request from origin: {origin}")
+    response = await call_next(request)
+    return response
 
 
 class SearchRequest(BaseModel):

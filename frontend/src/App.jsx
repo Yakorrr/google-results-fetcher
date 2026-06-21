@@ -1,21 +1,37 @@
-// frontend/App.jsx
 import {useState} from 'react';
+import './App.css';
 
 function App() {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState(null);
 
+    // Send search query to the FastAPI backend
     const handleSearch = async () => {
-        const response = await fetch('http://localhost:8000/api/search', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({query}),
-        });
+        // Basic validation to prevent empty requests
+        if (!query.trim()) return;
 
-        const data = await response.json();
-        setResults(data.results);
+        try {
+            const response = await fetch('http://localhost:8000/api/search', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query}),
+            });
+            const data = await response.json();
+            setResults(data.results);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
     };
 
+    // Trigger search on 'Enter' key press
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter') {
+            handleSearch().then(() => {
+            });
+        }
+    };
+
+    // Convert results to JSON and trigger a browser download
     const downloadFile = () => {
         const blob = new Blob([JSON.stringify(results, null, 2)], {
             type: 'application/json'
@@ -25,20 +41,43 @@ function App() {
         a.href = url;
         a.download = 'results.json';
         a.click();
+        URL.revokeObjectURL(url); // Clean up memory reference
     };
 
     return (
-        <div>
-            <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Enter keyword"
-            />
-            <button onClick={handleSearch}>Search</button>
+        <div className="container">
+            <h1>Google Search</h1>
+            <div className="search-wrapper">
+                <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Enter keyword"
+                />
+                <button onClick={handleSearch}>Search</button>
 
-            {results && (
-                <button onClick={downloadFile}>Download JSON</button>
-            )}
+                {results && (
+                    <div className="download-wrapper">
+                        <button
+                            onClick={downloadFile}
+                            style={{backgroundColor: '#28a745'}}
+                        >
+                            Download JSON
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            <ul className="results-list">
+                {results?.map((item, index) => (
+                    <li key={index} className="result-item">
+                        <a href={item.link} target="_blank" rel="noreferrer">
+                            {item.title}
+                        </a>
+                        <p>{item.snippet}</p>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }

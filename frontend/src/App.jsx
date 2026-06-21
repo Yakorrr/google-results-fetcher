@@ -6,13 +6,17 @@ function App() {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState(null);
 
+    // Get API URL from env variable (browser environment)
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+
     // Send search query to the FastAPI backend
     const handleSearch = async () => {
         // Basic validation to prevent empty requests
         if (!query.trim()) return;
 
         try {
-            const response = await fetch('http://localhost:8000/api/search', {
+            const response = await fetch(`${API_BASE_URL}/api/search`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({query}),
